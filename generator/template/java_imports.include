@@ -1,0 +1,14 @@
+<#assign className = table.className>
+import java.util.*;
+
+import com.hwcat.commons.base.*;
+import ${basepackage}.domain.*;
+import ${basepackage}.dao.*;
+import ${basepackage}.service.*;
+import ${basepackage}.service.impl.*;
+
+/**
+ * @version 1.0
+ * @since 1.0
+ */
+
