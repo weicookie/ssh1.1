@@ -1,9 +1,13 @@
 package com.harvey.common.base;
 
+import cn.org.rapid_framework.page.Page;
+import cn.org.rapid_framework.page.PageUtils;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
+import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -131,5 +135,57 @@ public abstract class BaseHibernateDao<E, PK extends Serializable> implements En
         }
 
         return criteria.list();
+    }
+    /**
+     * 如果要排序的话一定要用pageQuery(int pageNumber, int pageSize, DetachedCriteria detachedCriteria, Order[] orders)，否则在mysql下没问题，在其它不同的数据库驱动下可能会导致问题
+     * @param pageNumber
+     * @param pageSize
+     * @param detachedCriteria
+     * @return
+     */
+    protected Page<E> pageQuery(int pageNumber, int pageSize, DetachedCriteria detachedCriteria) {
+        Criteria criteria = detachedCriteria.getExecutableCriteria(getSession());
+        int totalCount = (
+                (Long) criteria.setProjection(Projections.rowCount()).uniqueResult()
+        ).intValue();
+        criteria.setProjection(null);
+        criteria.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
+        if(idOrderable){
+            criteria.addOrder(Order.asc(idFieldName));
+        }
+        List<E> items = criteria.setFirstResult(PageUtils.getFirstResult(pageNumber <= 0 ? 1 : pageNumber, pageSize))
+                .setMaxResults(pageSize)
+                .list();
+        return new Page<E>(pageNumber, pageSize, totalCount, items);
+    }
+
+    /**
+     * 带排序的pageQuery
+     * @param pageNumber
+     * @param pageSize
+     * @param detachedCriteria
+     * @param orders
+     * @return
+     */
+    protected Page<E> pageQuery(int pageNumber, int pageSize, DetachedCriteria detachedCriteria, Order[] orders) {
+        Criteria criteria = detachedCriteria.getExecutableCriteria(getSession());
+        int totalCount = (
+                (Long) criteria.setProjection(Projections.rowCount()).uniqueResult()
+        ).intValue();
+        criteria.setProjection(null);
+        criteria.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
+        boolean addDefaultOrder = true;
+        for (Order order : orders) {
+            criteria.addOrder(order);
+            if(order.toString().split(" ")[0].equals(idFieldName)){
+                addDefaultOrder = false;
+            }
+        }
+        if(addDefaultOrder && idOrderable){
+            criteria.addOrder(Order.asc(idFieldName));
+        }
+
+        List<E> items = criteria.setFirstResult(PageUtils.getFirstResult(pageNumber <= 0 ? 1 : pageNumber, pageSize)).setMaxResults(pageSize).list();
+        return new Page<E>(pageNumber, pageSize, totalCount, items);
     }
 }

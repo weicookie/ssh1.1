@@ -1,3 +1,5 @@
+说明：spring+springmvc+hibernate+mysql的整合
+
 本项目框架采用的是的工具版本：
 jdk：jdk-8u121-windows-x64
 tomcat：apache-tomcat-8.5.15
@@ -26,3 +28,4 @@ jackson-all-1.9.0.jar
 jackson-annotations-2.8.8.jar
 jackson-core-2.8.8.jar
 jackson-databind-2.8.8.jar
+8. 注意：rapid-framework-3.9.3.20100923.jar包已经是重新打包了，与网上下载的jar包不同
